@@ -39,9 +39,9 @@ export async function createClass(formData: FormData) {
 
     revalidatePath('/teacher/dashboard')
     return { success: true, classId: newClass[0].id }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating class:', error)
-    return { error: 'Failed to create class. Please try again.' }
+    return { error: `Failed to create class: ${error?.message || error || 'Unknown error'}` }
   }
 }
 
