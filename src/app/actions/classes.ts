@@ -28,7 +28,7 @@ export async function createClass(formData: FormData) {
   const parsed = createClassSchema.safeParse({ name })
 
   if (!parsed.success) {
-    return { error: parsed.error.errors[0].message }
+    return { error: parsed.error.issues[0]?.message || 'Invalid input' }
   }
 
   try {

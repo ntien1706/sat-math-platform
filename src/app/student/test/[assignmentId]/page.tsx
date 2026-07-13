@@ -15,7 +15,7 @@ export default async function TestPage({ params }: { params: Promise<{ assignmen
   const { assignmentId } = await params
   const { success, moduleData, error } = await getTestModuleData(assignmentId)
 
-  if (!success || !moduleData || moduleData.questions.length === 0) {
+  if (!success || !moduleData || !moduleData.id || moduleData.questions.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
@@ -32,5 +32,5 @@ export default async function TestPage({ params }: { params: Promise<{ assignmen
     )
   }
 
-  return <TestEngine assignmentId={assignmentId} moduleData={moduleData} />
+  return <TestEngine assignmentId={assignmentId} moduleData={moduleData as any} />
 }

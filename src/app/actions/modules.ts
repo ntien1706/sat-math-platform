@@ -33,7 +33,7 @@ export async function createModuleWithQuestions(data: CreateModuleInput) {
 
   const parsed = createModuleSchema.safeParse(data)
   if (!parsed.success) {
-    return { error: 'Invalid module data: ' + parsed.error.errors[0].message }
+    return { error: 'Invalid module data: ' + (parsed.error.issues[0]?.message || 'Unknown error') }
   }
 
   try {

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Link from 'next/link'
 import { getTeacherModules, getClassAssignments } from '@/app/actions/assignments'
 import { getClassProgressOverview } from '@/app/actions/teacherAnalytics'
 import AddStudentForm from './AddStudentForm'

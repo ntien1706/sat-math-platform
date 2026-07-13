@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')

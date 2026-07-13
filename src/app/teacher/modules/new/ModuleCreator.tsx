@@ -55,7 +55,7 @@ export default function ModuleCreator() {
     if (res.error) {
       alert(res.error)
     } else if (res.url) {
-      setValue(`questions.${index}.imageUrl`, res.url)
+      setValue(`questions.${index}.imageUrl` as any, res.url)
     }
   }
 
@@ -181,7 +181,7 @@ export default function ModuleCreator() {
                         onChange={(e) => handleImageUpload(index, e)}
                         className="text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-white"
                       />
-                      {watch(`questions.${index}.imageUrl`) && (
+                      {watch(`questions.${index}.imageUrl` as any) && (
                         <span className="text-sm text-green-600 dark:text-green-400 font-medium">&check; Uploaded</span>
                       )}
                     </div>
