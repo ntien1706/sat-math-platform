@@ -1,11 +1,21 @@
 import Link from 'next/link'
 import { getClassRoster } from '@/app/actions/enrollments'
+import { getTeacherModules, getClassAssignments } from '@/app/actions/assignments'
 import AddStudentForm from './AddStudentForm'
+import AssignModuleForm from './AssignModuleForm'
 
 export default async function ClassDetailsPage({ params }: { params: Promise<{ classId: string }> }) {
   const { classId } = await params
 
-  const { success, roster, className, error } = await getClassRoster(classId)
+  const [rosterData, modulesData, assignmentsData] = await Promise.all([
+    getClassRoster(classId),
+    getTeacherModules(),
+    getClassAssignments(classId)
+  ])
+
+  const { success: rosterSuccess, roster, className, error: rosterError } = rosterData
+  const modules = modulesData.success ? modulesData.modules : []
+  const assignmentsList = assignmentsData.success ? assignmentsData.assignments : []
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -22,9 +32,9 @@ export default async function ClassDetailsPage({ params }: { params: Promise<{ c
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!success ? (
+        {!rosterSuccess ? (
           <div className="bg-red-50 dark:bg-red-900/50 p-6 rounded-lg text-red-600 dark:text-red-400">
-            {error || 'Failed to load class details.'}
+            {rosterError || 'Failed to load class details.'}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -32,17 +42,42 @@ export default async function ClassDetailsPage({ params }: { params: Promise<{ c
             <div className="lg:col-span-1 flex flex-col gap-6">
               <AddStudentForm classId={classId} />
               
+              <AssignModuleForm classId={classId} modules={modules || []} />
+              
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                 <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Class Info</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-mono text-xs break-all">ID: {classId}</p>
-                <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                  More management tools (Assignments, Modules) will go here.
-                </p>
               </div>
             </div>
 
-            {/* Right Column: Roster */}
-            <div className="lg:col-span-2">
+            {/* Right Column: Roster & Assignments */}
+            <div className="lg:col-span-2 flex flex-col gap-8">
+              
+              {/* Assignments List */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Active Assignments</h2>
+                </div>
+                
+                {assignmentsList && assignmentsList.length > 0 ? (
+                  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {assignmentsList.map((assignment) => (
+                      <li key={assignment.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                        <h4 className="text-md font-medium text-gray-900 dark:text-white">{assignment.moduleName}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          Assigned: {new Date(assignment.assignedAt).toLocaleDateString()}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-6 text-center text-gray-500 dark:text-gray-400 italic text-sm">
+                    No assignments active for this class.
+                  </div>
+                )}
+              </div>
+
+              {/* Roster Table */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Class Roster</h2>
@@ -88,6 +123,7 @@ export default async function ClassDetailsPage({ params }: { params: Promise<{ c
                 )}
               </div>
             </div>
+
           </div>
         )}
       </main>

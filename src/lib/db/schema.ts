@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, text, timestamp, unique, integer, jsonb } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, uuid, text, timestamp, unique, integer, jsonb, boolean } from 'drizzle-orm/pg-core'
 
 export const userRoleEnum = pgEnum('user_role', ['teacher', 'student'])
 export const questionTypeEnum = pgEnum('question_type', ['MCQ', 'SPR'])
@@ -47,4 +47,35 @@ export const questions = pgTable('questions', {
   correctAnswer: text('correct_answer').notNull(),
 }, (t) => ({
   unq: unique().on(t.moduleId, t.questionNumber)
+}))
+
+export const assignments = pgTable('assignments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  classId: uuid('class_id').notNull().references(() => classes.id, { onDelete: 'cascade' }),
+  moduleId: uuid('module_id').notNull().references(() => modules.id, { onDelete: 'cascade' }),
+  assignedAt: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+}, (t) => ({
+  unq: unique().on(t.classId, t.moduleId)
+}))
+
+export const submissions = pgTable('submissions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  assignmentId: uuid('assignment_id').notNull().references(() => assignments.id, { onDelete: 'cascade' }),
+  studentId: uuid('student_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  rawScore: integer('raw_score').notNull(),
+  timeElapsed: integer('time_elapsed').notNull(),
+  submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  unq: unique().on(t.assignmentId, t.studentId)
+}))
+
+export const submissionAnswers = pgTable('submission_answers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  submissionId: uuid('submission_id').notNull().references(() => submissions.id, { onDelete: 'cascade' }),
+  questionId: uuid('question_id').notNull().references(() => questions.id, { onDelete: 'cascade' }),
+  studentAnswer: text('student_answer'),
+  isCorrect: boolean('is_correct').notNull(),
+}, (t) => ({
+  unq: unique().on(t.submissionId, t.questionId)
 }))
