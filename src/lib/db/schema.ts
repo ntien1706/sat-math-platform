@@ -79,3 +79,15 @@ export const submissionAnswers = pgTable('submission_answers', {
 }, (t) => ({
   unq: unique().on(t.submissionId, t.questionId)
 }))
+
+export const mistakeBank = pgTable('mistake_bank', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  studentId: uuid('student_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  questionId: uuid('question_id').notNull().references(() => questions.id, { onDelete: 'cascade' }),
+  studentInput: text('student_input'),
+  correctAnswer: text('correct_answer').notNull(),
+  isRemembered: boolean('is_remembered').notNull().default(false),
+  addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  unq: unique().on(t.studentId, t.questionId)
+}))

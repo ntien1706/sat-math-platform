@@ -1,8 +1,10 @@
 import { getStudentEnrollments } from '@/app/actions/enrollments'
 import { getPendingAssignments } from '@/app/actions/test'
+import { getStudentDomainStats } from '@/app/actions/analytics'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import DomainStatsChart from './DomainStatsChart'
 
 export default async function StudentDashboard() {
   const supabase = await createClient()
@@ -12,13 +14,15 @@ export default async function StudentDashboard() {
     redirect('/login')
   }
 
-  const [enrollmentsData, pendingAssignmentsData] = await Promise.all([
+  const [enrollmentsData, pendingAssignmentsData, statsData] = await Promise.all([
     getStudentEnrollments(),
-    getPendingAssignments()
+    getPendingAssignments(),
+    getStudentDomainStats()
   ])
 
   const enrollments = enrollmentsData.success ? enrollmentsData.enrollments : []
   const pendingAssignments = pendingAssignmentsData.success ? pendingAssignmentsData.pendingAssignments : []
+  const stats = statsData.success ? statsData.stats : []
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -33,9 +37,13 @@ export default async function StudentDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Pending Homework */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Homework</h2>
+        {/* Top Row: Pending Homework & Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Pending Homework */}
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Homework</h2>
+
           
           {pendingAssignments && pendingAssignments.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -64,7 +72,30 @@ export default async function StudentDashboard() {
             <div className="text-gray-500 dark:text-gray-400 text-sm italic border-l-4 border-green-500 pl-4 py-2 bg-green-50 dark:bg-green-900/20">
               You have no pending homework. Great job!
             </div>
-          )}
+            )}
+          </div>
+
+          {/* Analytics Radar */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Radar</h2>
+              <DomainStatsChart data={stats || []} />
+            </div>
+
+            {/* Mistake Bank Shortcut */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-sm p-6 text-white flex flex-col items-center text-center">
+              <span className="text-4xl mb-3">🧠</span>
+              <h3 className="font-bold text-xl mb-2">The Mistake Bank</h3>
+              <p className="text-blue-100 text-sm mb-4">Review missed questions to boost your accuracy.</p>
+              <Link 
+                href="/student/mistakes"
+                className="w-full py-2 bg-white text-blue-700 font-semibold rounded hover:bg-gray-50 transition shadow-sm"
+              >
+                Open Mistake Bank
+              </Link>
+            </div>
+          </div>
+
         </div>
 
         {/* Enrolled Classes */}

@@ -1,9 +1,9 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { assignments, modules, classes, classEnrollments, profiles, questions, submissions, submissionAnswers } from '@/lib/db/schema'
+import { assignments, modules, classes, classEnrollments, profiles, questions, submissions, submissionAnswers, mistakeBank } from '@/lib/db/schema'
 import { createClient } from '@/utils/supabase/server'
-import { eq, and, isNull, inArray } from 'drizzle-orm'
+import { eq, and, isNull, inArray, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getPendingAssignments() {
@@ -263,9 +263,37 @@ export async function submitTest(assignmentId: string, answersArray: AnswerInput
       }))
 
       await tx.insert(submissionAnswers).values(answersWithSubId)
+
+      // Sync mistake bank
+      const mistakesToInsert = submissionAnswersToInsert
+        .filter(a => !a.isCorrect)
+        .map(a => {
+          const q = qMap.get(a.questionId)
+          return {
+            studentId: user.id,
+            questionId: a.questionId,
+            studentInput: a.studentAnswer,
+            correctAnswer: q.correctAnswer
+          }
+        })
+
+      if (mistakesToInsert.length > 0) {
+        // Use onConflictDoUpdate to prevent duplicates but update the latest incorrect answer
+        await tx.insert(mistakeBank)
+          .values(mistakesToInsert)
+          .onConflictDoUpdate({
+            target: [mistakeBank.studentId, mistakeBank.questionId],
+            set: {
+              studentInput: sql`EXCLUDED.student_input`,
+              isRemembered: false, // Reset to not remembered if they miss it again
+              addedAt: sql`NOW()`,
+            }
+          })
+      }
     })
 
     revalidatePath('/student/dashboard')
+    revalidatePath('/student/mistakes')
     return { success: true }
   } catch (error) {
     console.error('Error submitting test:', error)
