@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import ModuleCreator from './ModuleCreator'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'

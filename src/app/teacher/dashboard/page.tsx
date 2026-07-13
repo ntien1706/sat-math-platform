@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getTeacherClasses } from '@/app/actions/classes'
 import CreateClassForm from './CreateClassForm'
 import Link from 'next/link'

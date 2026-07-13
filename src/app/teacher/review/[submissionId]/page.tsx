@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getSubmissionReview } from '@/app/actions/teacherAnalytics'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'

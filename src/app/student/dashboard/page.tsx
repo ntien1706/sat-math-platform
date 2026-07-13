@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getStudentEnrollments } from '@/app/actions/enrollments'
 import { getPendingAssignments } from '@/app/actions/test'
 import { getStudentDomainStats } from '@/app/actions/analytics'

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getStudentDeepDive } from '@/app/actions/teacherAnalytics'
 import { getStudentDomainStats } from '@/app/actions/analytics'
 import { createClient } from '@/utils/supabase/server'

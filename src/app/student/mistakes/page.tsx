@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getStudentMistakes } from '@/app/actions/analytics'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'

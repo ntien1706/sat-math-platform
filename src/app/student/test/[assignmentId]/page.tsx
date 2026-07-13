@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getTestModuleData } from '@/app/actions/test'
 import TestEngine from './TestEngine'
 import { createClient } from '@/utils/supabase/server'
