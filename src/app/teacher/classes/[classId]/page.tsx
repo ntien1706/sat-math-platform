@@ -1,19 +1,24 @@
 import Link from 'next/link'
-import { getClassRoster } from '@/app/actions/enrollments'
+import Link from 'next/link'
 import { getTeacherModules, getClassAssignments } from '@/app/actions/assignments'
+import { getClassProgressOverview } from '@/app/actions/teacherAnalytics'
 import AddStudentForm from './AddStudentForm'
 import AssignModuleForm from './AssignModuleForm'
 
 export default async function ClassDetailsPage({ params }: { params: Promise<{ classId: string }> }) {
   const { classId } = await params
 
-  const [rosterData, modulesData, assignmentsData] = await Promise.all([
-    getClassRoster(classId),
+  const [progressData, modulesData, assignmentsData] = await Promise.all([
+    getClassProgressOverview(classId),
     getTeacherModules(),
     getClassAssignments(classId)
   ])
 
-  const { success: rosterSuccess, roster, className, error: rosterError } = rosterData
+  // If we had the class name from getRoster, we'll need to fetch it separately or just use ID
+  // For simplicity since overview doesn't return className, we'll say Class Details
+  const roster = progressData.success ? progressData.overview : []
+  const rosterError = progressData.error
+  const rosterSuccess = progressData.success
   const modules = modulesData.success ? modulesData.modules : []
   const assignmentsList = assignmentsData.success ? assignmentsData.assignments : []
 
@@ -26,7 +31,7 @@ export default async function ClassDetailsPage({ params }: { params: Promise<{ c
           </Link>
           <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-2"></div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {className || 'Class Details'}
+            Class Details
           </h1>
         </div>
       </header>
@@ -89,27 +94,43 @@ export default async function ClassDetailsPage({ params }: { params: Promise<{ c
                       <thead className="bg-gray-50 dark:bg-gray-800">
                         <tr>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Name
+                            Student
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Email
+                            Completion
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Enrolled
+                            Accuracy
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Action
                           </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                         {roster.map((student) => (
-                          <tr key={student.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                              {student.fullName}
+                          <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{student.email}</div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {student.email}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-600" style={{ width: `${student.completionRate}%` }}></div>
+                                </div>
+                                <span>{student.completedAssignments}/{student.totalAssignments}</span>
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {student.enrolledAt ? new Date(student.enrolledAt).toLocaleDateString() : 'N/A'}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                              <span className={`font-semibold ${student.accuracy >= 80 ? 'text-green-600' : student.accuracy >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+                                {student.totalAssignments > 0 ? `${student.accuracy}%` : 'N/A'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Link href={`/teacher/student/${student.id}`} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                View Profile
+                              </Link>
                             </td>
                           </tr>
                         ))}

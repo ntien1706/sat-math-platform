@@ -74,12 +74,25 @@ export async function toggleMistakeRemembered(mistakeId: string, currentStatus: 
   }
 }
 
-export async function getStudentDomainStats() {
+export async function getStudentDomainStats(targetStudentId?: string) {
   const supabase = await createClient()
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-  if (userError || !user || user.user_metadata?.role !== 'student') {
+  if (userError || !user) {
     return { error: 'Unauthorized', stats: [] }
+  }
+
+  // Determine whose stats to fetch
+  let queryStudentId = user.id
+  if (targetStudentId) {
+    if (user.user_metadata?.role !== 'teacher') {
+      return { error: 'Unauthorized', stats: [] }
+    }
+    queryStudentId = targetStudentId
+  } else {
+    if (user.user_metadata?.role !== 'student') {
+      return { error: 'Unauthorized', stats: [] }
+    }
   }
 
   try {
@@ -93,7 +106,7 @@ export async function getStudentDomainStats() {
       .from(submissionAnswers)
       .innerJoin(submissions, eq(submissionAnswers.submissionId, submissions.id))
       .innerJoin(questions, eq(submissionAnswers.questionId, questions.id))
-      .where(eq(submissions.studentId, user.id))
+      .where(eq(submissions.studentId, queryStudentId))
 
     // 2. Fetch student's remembered mistakes
     const rememberedMistakes = await db
@@ -102,7 +115,7 @@ export async function getStudentDomainStats() {
       })
       .from(mistakeBank)
       .where(and(
-        eq(mistakeBank.studentId, user.id),
+        eq(mistakeBank.studentId, queryStudentId),
         eq(mistakeBank.isRemembered, true)
       ))
 
