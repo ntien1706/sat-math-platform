@@ -42,9 +42,17 @@ export default function RegisterPage() {
       formData.append('fullName', data.fullName)
       formData.append('role', data.role)
       
-      const result = await signup(formData)
-      if (result?.error) {
-        setError(result.error)
+      try {
+        const result = await signup(formData)
+        if (result?.error) {
+          const errMsg = typeof result.error === 'string' 
+            ? result.error 
+            : (result.error as any).message || JSON.stringify(result.error);
+          
+          setError(errMsg === '{}' ? 'Registration failed. Please try again.' : errMsg)
+        }
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred.')
       }
     })
   }
@@ -58,7 +66,7 @@ export default function RegisterPage() {
           </h2>
         </div>
         
-        {error && (
+        {error && typeof error === 'string' && error.trim() !== '' && error !== '{}' && (
           <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-md text-sm">
             {error}
           </div>
