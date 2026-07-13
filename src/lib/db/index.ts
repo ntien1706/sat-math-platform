@@ -17,6 +17,15 @@ if (match) {
 // Fallback to a dummy connection string during Vercel build if DATABASE_URL is missing
 const safeConnectionString = connectionString || 'postgresql://postgres:pass@localhost:5432/postgres'
 
-// Disable prefetch as it is not supported for "Transaction" pool mode
-const client = postgres(safeConnectionString, { prepare: false })
+// Singleton pattern for Next.js hot reloading to prevent connection leaks
+declare global {
+  // eslint-disable-next-line no-var
+  var postgresClient: ReturnType<typeof postgres> | undefined
+}
+
+const client = globalThis.postgresClient ?? postgres(safeConnectionString, { prepare: false })
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.postgresClient = client
+}
+
 export const db = drizzle(client, { schema })
