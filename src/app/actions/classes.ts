@@ -41,7 +41,9 @@ export async function createClass(formData: FormData) {
     return { success: true, classId: newClass[0].id }
   } catch (error: any) {
     console.error('Error creating class:', error)
-    return { error: `Failed to create class: ${error?.message || error || 'Unknown error'}` }
+    const causeMsg = error?.cause?.message ? ` (${error.cause.message})` : ''
+    const detailMsg = error?.cause?.detail ? ` - Detail: ${error.cause.detail}` : ''
+    return { error: `Failed to create class: ${error?.message || error || 'Unknown error'}${causeMsg}${detailMsg}` }
   }
 }
 
